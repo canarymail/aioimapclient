@@ -681,6 +681,8 @@ class AsyncIMAPClient:
         The return value is the server command response message
         followed by a list of status responses.
         """
+        await self._imap.connect()
+        self._apply_read_timeout()
         try:
             tag = await self._imap._command("NOOP")
             return await self._consume_until_tagged_response(tag, "NOOP")
@@ -994,6 +996,8 @@ class AsyncIMAPClient:
         if self.use_uid:
             args.insert(0, "UID")
 
+        await self._imap.connect()
+        self._apply_read_timeout()
         try:
             tag = await self._imap._command(*args)
             typ, data = await self._imap._command_complete("FETCH", tag)
@@ -1102,6 +1106,8 @@ class AsyncIMAPClient:
             return await self._command_and_check(
                 "EXPUNGE", join_message_ids(messages), uid=True
             )
+        await self._imap.connect()
+        self._apply_read_timeout()
         try:
             tag = await self._imap._command("EXPUNGE")
             return await self._consume_until_tagged_response(tag, "EXPUNGE")
@@ -1250,6 +1256,11 @@ class AsyncIMAPClient:
         *command* should be specified as bytes.
         *args* should be specified as a list of bytes.
         """
+        # Ensure we are connected before calling _new_tag() which needs
+        # ``tagpre`` (only set during _connect()).
+        await self._imap.connect()
+        self._apply_read_timeout()
+
         command = command.upper()
 
         has_literal_plus = await self.has_capability("LITERAL+")
