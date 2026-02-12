@@ -65,19 +65,40 @@ _aioimaplib = None
 
 
 def _import_aioimaplib():
-    """Import aioimaplib on first use, adding the vendored deps path if needed."""
+    """Import aioimaplib on first use.
+
+    The resolution order is:
+
+    1. Try a normal ``import aioimaplib`` – this succeeds when the
+       package is pip-installed (e.g.
+       ``pip install aioimaplib@git+https://github.com/canarymail/aioimaplib``).
+    2. Fall back to the vendored copy at ``deps/aioimaplib/src`` which
+       is available in development / editable-install checkouts.
+    3. If neither is available raise ``ModuleNotFoundError`` with an
+       actionable message.
+    """
     global _aioimaplib
     if _aioimaplib is not None:
         return _aioimaplib
 
-    _deps_path = os.path.join(
-        os.path.dirname(__file__), "..", "deps", "aioimaplib", "src"
-    )
-    _deps_abs = os.path.abspath(_deps_path)
-    if _deps_abs not in sys.path:
-        sys.path.insert(0, _deps_abs)
-
-    _aioimaplib = importlib.import_module("aioimaplib")
+    try:
+        _aioimaplib = importlib.import_module("aioimaplib")
+    except ModuleNotFoundError:
+        # Vendored fallback for development checkouts
+        _deps_path = os.path.join(
+            os.path.dirname(__file__), "..", "deps", "aioimaplib", "src"
+        )
+        _deps_abs = os.path.abspath(_deps_path)
+        if os.path.isdir(_deps_abs):
+            if _deps_abs not in sys.path:
+                sys.path.insert(0, _deps_abs)
+            _aioimaplib = importlib.import_module("aioimaplib")
+        else:
+            raise ModuleNotFoundError(
+                "aioimaplib is required for AsyncIMAPClient.  Install it with:\n"
+                "  pip install aioimaplib@git+https://github.com/canarymail/aioimaplib\n"
+                "or clone it into deps/aioimaplib in the source tree."
+            ) from None
 
     # Register extension commands that the sync client patches into
     # imaplib.Commands but are missing from aioimaplib.Commands.

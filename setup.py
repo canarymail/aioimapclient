@@ -35,6 +35,16 @@ functional tests that can be run against a live IMAP server.
 
 doc_deps = ["sphinx"]
 
+async_deps = [
+    "aioimaplib@git+https://github.com/canarymail/aioimaplib",
+]
+
+test_deps = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "python-dotenv>=1.0",
+]
+
 setup(
     name="IMAPClient",
     description="Easy-to-use, Pythonic and complete IMAP client library",
@@ -48,7 +58,11 @@ setup(
     url="https://github.com/mjs/imapclient/",
     packages=["imapclient"],
     package_data=dict(imapclient=["examples/*.py"]),
-    extras_require={"doc": doc_deps},
+    extras_require={
+        "doc": doc_deps,
+        "async": async_deps,
+        "test": test_deps,
+    },
     long_description=desc,
     python_requires=">=3.8.0",
     classifiers=[

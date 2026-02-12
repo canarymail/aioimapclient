@@ -11,9 +11,12 @@ async integration tests can find Fastmail credentials without manual
 
 import pathlib
 
-from dotenv import load_dotenv
-
 _ENV_FILE = pathlib.Path(__file__).resolve().parents[1] / "deps" / "aioimaplib" / ".env"
 
 if _ENV_FILE.is_file():
-    load_dotenv(_ENV_FILE)
+    try:
+        from dotenv import load_dotenv
+
+        load_dotenv(_ENV_FILE)
+    except ModuleNotFoundError:
+        pass  # python-dotenv not installed; credentials must be set manually

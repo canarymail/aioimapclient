@@ -31,6 +31,9 @@ Features
   client are in different zones.
 - Convenience methods are provided for commonly used functionality.
 - Exceptions are raised when errors occur.
+- Full asyncio support via ``AsyncIMAPClient`` (see
+  `aio-imap-client.md <aio-imap-client.md>`_ for implementation
+  details).
 
 Example
 -------
@@ -59,6 +62,33 @@ Example
                 size=data[b'RFC822.SIZE'],
                 flags=data[b'FLAGS']))
 
+Async Example
+-------------
+
+.. code-block:: python
+
+    import asyncio
+    from imapclient import AsyncIMAPClient
+
+    async def main():
+        async with AsyncIMAPClient(host="imap.host.org") as client:
+            await client.login('someone', 'secret')
+            await client.select_folder('INBOX')
+
+            messages = await client.search(['NOT', 'DELETED'])
+            response = await client.fetch(messages, ['FLAGS', 'RFC822.SIZE'])
+
+            for message_id, data in response.items():
+                print('{id}: {size} bytes, flags={flags}'.format(
+                    id=message_id,
+                    size=data[b'RFC822.SIZE'],
+                    flags=data[b'FLAGS']))
+
+    asyncio.run(main())
+
+See `aio-imap-client.md <aio-imap-client.md>`_ for the full
+``AsyncIMAPClient`` API reference and implementation details.
+
 Why IMAPClient?
 ---------------
 You may ask: "why create another IMAP client library for Python?
@@ -82,6 +112,11 @@ Installing IMAPClient
 IMAPClient is listed on PyPI and can be installed with pip::
 
     pip install imapclient
+
+To use the async client (``AsyncIMAPClient``), install with the ``async``
+extra::
+
+    pip install 'imapclient[async]'
 
 More installation methods are described in the documentation.
 

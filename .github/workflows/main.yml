@@ -33,4 +33,26 @@ jobs:
     - name: Install test dependencies
       run: python -m pip install --editable .[test]
     - name: Test
-      run: python -m unittest --verbose
+      run: python -m pytest tests/ --ignore=tests/test_aioimapclient_live.py -q
+
+  async-test:
+    # Live async integration tests -- only runs when secrets are available
+    # (i.e. on pushes to master, not on external PRs).
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+    - name: Install dependencies
+      run: |
+        python -m pip install --editable .[test,async]
+    - name: Run async live tests
+      env:
+        AIOIMAPLIB_FASTMAIL_USER: ${{ secrets.AIOIMAPLIB_FASTMAIL_USER }}
+        AIOIMAPLIB_FASTMAIL_PASSWORD: ${{ secrets.AIOIMAPLIB_FASTMAIL_PASSWORD }}
+      run: python -m pytest tests/test_aioimapclient_live.py -v

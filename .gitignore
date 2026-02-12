@@ -14,6 +14,7 @@ doc/html/
 setuptools-*
 unittest2-*
 six-*
+deps/
 
 # By explicity not ignoring these, ripgrep (rg) will search them.
 !.github/
